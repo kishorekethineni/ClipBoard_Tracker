@@ -5,8 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
+import android.util.Log;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -16,7 +20,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent serviceIntent = new Intent(this, ForegroundService.class);
-        serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
-        ContextCompat.startForegroundService(this, serviceIntent);    }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.i("TAG","onStart MainActivity");
+        ///WhiteListing
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            String packageName = getPackageName();
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + packageName));
+                startActivity(intent);
+            }
+        }
+        else
+        {
+            Intent intent =new Intent(this, ForegroundService.class);
+            intent.setAction(ForegroundService.ACTION_START_FOREGROUND_SERVICE);
+            startService(intent);
+        }
+    }
 }
+
